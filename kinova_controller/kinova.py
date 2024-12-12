@@ -12,45 +12,43 @@ import threading
 import time
 
 import numpy as np
-import pinocchio as pin
-
-# Rajat ToDo: Move all ROS stuff to a separate interface
-# import rospy
-try:
-    from kortex_api.autogen.client_stubs.ActuatorConfigClientRpc import (
-        ActuatorConfigClient,
-    )
-    from kortex_api.autogen.client_stubs.BaseClientRpc import BaseClient
-    from kortex_api.autogen.client_stubs.BaseCyclicClientRpc import BaseCyclicClient
-    from kortex_api.autogen.client_stubs.ControlConfigClientRpc import (
-        ControlConfigClient,
-    )
-    from kortex_api.autogen.client_stubs.DeviceConfigClientRpc import DeviceConfigClient
-    from kortex_api.autogen.client_stubs.DeviceManagerClientRpc import (
-        DeviceManagerClient,
-    )
-    from kortex_api.autogen.messages import (
-        ActuatorConfig_pb2,
-        ActuatorCyclic_pb2,
-        Base_pb2,
-        BaseCyclic_pb2,
-        Common_pb2,
-        ControlConfig_pb2,
-        DeviceConfig_pb2,
-        Session_pb2,
-    )
-    from kortex_api.RouterClient import RouterClient, RouterClientSendOptions
-    from kortex_api.SessionManager import SessionManager
-    from kortex_api.TCPTransport import TCPTransport
-    from kortex_api.UDPTransport import UDPTransport
-except ModuleNotFoundError:
-    pass
 from scipy.spatial.transform import Rotation as R
 
-# for joint space compliant control
-from kinova_controller.compliant_controller import CompliantController
+# This is a workaround for Kinova API using collections.MutableMapping and collections.MutableSequence
+import collections
+if not hasattr(collections, 'MutableMapping'):
+    from collections.abc import MutableMapping
+    collections.MutableMapping = MutableMapping
+if not hasattr(collections, 'MutableSequence'):
+    from collections.abc import MutableSequence
+    collections.MutableSequence = MutableSequence
 
-# from std_msgs.msg import Bool
+from kortex_api.autogen.client_stubs.ActuatorConfigClientRpc import (
+    ActuatorConfigClient,
+)
+from kortex_api.autogen.client_stubs.BaseClientRpc import BaseClient
+from kortex_api.autogen.client_stubs.BaseCyclicClientRpc import BaseCyclicClient
+from kortex_api.autogen.client_stubs.ControlConfigClientRpc import (
+    ControlConfigClient,
+)
+from kortex_api.autogen.client_stubs.DeviceConfigClientRpc import DeviceConfigClient
+from kortex_api.autogen.client_stubs.DeviceManagerClientRpc import (
+    DeviceManagerClient,
+)
+from kortex_api.autogen.messages import (
+    ActuatorConfig_pb2,
+    ActuatorCyclic_pb2,
+    Base_pb2,
+    BaseCyclic_pb2,
+    Common_pb2,
+    ControlConfig_pb2,
+    DeviceConfig_pb2,
+    Session_pb2,
+)
+from kortex_api.RouterClient import RouterClient, RouterClientSendOptions
+from kortex_api.SessionManager import SessionManager
+from kortex_api.TCPTransport import TCPTransport
+from kortex_api.UDPTransport import UDPTransport
 
 
 class DeviceConnection:
@@ -172,11 +170,6 @@ class KinovaArm:
         for device_id in self.actuator_device_ids:
             self.actuator_config.SetControlMode(control_mode_message, device_id)
 
-        # Make sure arm is in high-level servoing mode
-        self.set_arm_servoing_mode("high")
-
-        self.tool_frame_id = self.model.getFrameId("tool_frame")
-
         # Action topic notifications
         self.end_or_abort_event = threading.Event()
         self.end_or_abort_event.set()
@@ -198,9 +191,6 @@ class KinovaArm:
         )
 
     def disconnect(self):
-        if self.cyclic_running:
-            self.stop_cyclic()
-
         self.base.Unsubscribe(self.notification_handle)
         self.tcp_connection.__exit__()
         self.udp_connection.__exit__()
@@ -213,8 +203,6 @@ class KinovaArm:
         self.end_or_abort_event.wait(KinovaArm.ACTION_TIMEOUT_DURATION)
 
     def _execute_reference_action(self, action_name, blocking=True):
-        assert not self.cyclic_running, "Arm must be in high-level servoing mode"
-
         # Retrieve reference action
         action_type = Base_pb2.RequestedActionType()
         action_type.action_type = Base_pb2.REACH_JOINT_ANGLES
@@ -240,10 +228,6 @@ class KinovaArm:
 
     def zero(self):
         self._execute_reference_action("Zero")
-
-    def set_intermediate_zero_config(self):
-        intermediate_zero_config = [0.0, 0.0, -3.12, 0.0, 0.0, 0.0, 0.0]
-        self.move_angular(intermediate_zero_config)
 
     def get_ee_force(self):
         base_feedback = self.base_cyclic.RefreshFeedback()
@@ -319,7 +303,8 @@ class KinovaArm:
             base_feedback.interconnect.gripper_feedback.motor[0].position / 100.0
         )
 
-        return q, dq, tau, ee_pos, ee_vel, ee_force, gripper_pos
+        return q, ee_pos, gripper_pos
+        # return q, dq, tau, ee_pos, ee_vel, ee_force, gripper_pos
 
     def move_angular_trajectory(self, trajectory_joint_angles, blocking=True):
 
@@ -574,10 +559,13 @@ class KinovaArm:
 def main():
     arm = KinovaArm()
     try:
+        input("Press Enter to move to retract pos")
+        arm.retract()
+
         input("Press Enter to move to home pos")
         arm.home()
 
-        before_transfer_pos = [
+        custom_pos = [
             -2.8655331,
             -1.61973777,
             -2.6097253,
@@ -587,8 +575,8 @@ def main():
             2.05515662,
         ]
 
-        input("Press Enter to move to before transfer pos")
-        arm.move_angular(before_transfer_pos)
+        input("Press Enter to move to custom pos (double check DoF to match your robot)")
+        arm.move_angular(custom_pos)
 
     finally:
         arm.disconnect()
