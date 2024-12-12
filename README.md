@@ -38,5 +38,10 @@ Run the robot client:
 python arm_client.py
 ```
 
+If you want to publish robot joint and cartesian states to ROS:
+```bash
+python joint_states_publisher.py
+```
+
 #### Optional:
 You can also run the emergency stop script (to be documented).
