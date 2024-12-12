@@ -12,7 +12,9 @@ dependencies = [
    "numpy",
    "multiprocess",
    "kortex-api @ https://artifactory.kinovaapps.com:443/artifactory/generic-public/kortex/API/2.6.0/kortex_api-2.6.0.post3-py3-none-any.whl",
-   "scipy"
+   "scipy",
+   "PyYAML",
+   "rospkg"
 ]
 
 [project.optional-dependencies]

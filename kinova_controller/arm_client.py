@@ -5,12 +5,7 @@ Entrypoint for controlling the robot arm on compute machine.
 
 import threading
 import time
-
 import numpy as np
-import rospy
-from geometry_msgs.msg import Pose
-from sensor_msgs.msg import JointState
-from std_msgs.msg import Bool
 
 from kinova_controller.arm_interface import (
     ARM_RPC_PORT,
@@ -99,7 +94,6 @@ class ArmInterfaceClient:
 
 if __name__ == "__main__":
 
-    rospy.init_node("arm_interface_client", anonymous=True)
     arm_client_interface = ArmInterfaceClient()
 
     run_commands = input("Press 'y' to run commands")
@@ -107,21 +101,14 @@ if __name__ == "__main__":
     if run_commands != "y":
         exit()
 
-    before_transfer_pos = [
-        -2.86554642,
-        -1.61951779,
-        -2.60986085,
-        -1.37302839,
-        1.11779249,
-        -1.18028264,
-        2.05515862,
+    input("Press enter to move to home pos (make sure DoFs in code matches the robot)...")
+    home_pos = [
+        0, 
+        0.26190290154176943, 
+        -3.1415700167205274, 
+        -2.269006324528677, 
+        0, 
+        0.959890342232203, 
+        1.570794329424079
     ]
-
-    input("Press enter to move to before transfer pos...")
-    arm_client_interface.execute_command(JointCommand(before_transfer_pos))
-
-    input("Press enter to go to compliance mode...")
-    arm_client_interface.switch_to_task_compliant_mode()
-
-    input("Press Enter to switch out of compliant mode")
-    arm_client_interface.switch_out_of_compliant_mode()
+    arm_client_interface.execute_command(JointCommand(home_pos))
