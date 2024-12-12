@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: kinova_controller
+Version: 0.1.0
+Summary: Code for controlling Kinova robots
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: multiprocess
+Requires-Dist: kortex-api@ https://artifactory.kinovaapps.com:443/artifactory/generic-public/kortex/API/2.6.0/kortex_api-2.6.0.post3-py3-none-any.whl
+Provides-Extra: develop
+Requires-Dist: black; extra == "develop"
+Requires-Dist: docformatter; extra == "develop"
+Requires-Dist: isort; extra == "develop"
+Requires-Dist: mypy; extra == "develop"
+Requires-Dist: pylint>=2.14.5; extra == "develop"
+Requires-Dist: pytest-pylint>=0.18.0; extra == "develop"
+Requires-Dist: pytest>=7.2.2; extra == "develop"
