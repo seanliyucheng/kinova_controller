@@ -154,6 +154,7 @@ class KinovaArm:
 
         # clear faults
         self.clear_faults()
+        self._ensure_single_level_servoing()
 
         # Command and feedback setup
         self.base_command = BaseCyclic_pb2.Command()
@@ -201,6 +202,11 @@ class KinovaArm:
 
     def wait_ready(self):
         self.end_or_abort_event.wait(KinovaArm.ACTION_TIMEOUT_DURATION)
+
+    def _ensure_single_level_servoing(self):
+        servoing_mode = Base_pb2.ServoingModeInformation()
+        servoing_mode.servoing_mode = Base_pb2.SINGLE_LEVEL_SERVOING
+        self.base.SetServoingMode(servoing_mode)
 
     def _execute_reference_action(self, action_name, blocking=True):
         # Retrieve reference action
@@ -355,6 +361,7 @@ class KinovaArm:
         assert (
             len(joint_angles) == self.actuator_count
         ), "Invalid number of joint angles"
+        self._ensure_single_level_servoing()
 
         # Create action
         action = Base_pb2.Action()
@@ -387,6 +394,7 @@ class KinovaArm:
     def move_cartesian(self, xyz, xyz_quat, blocking=True):
 
         theta_xyz = R.from_quat(xyz_quat).as_euler("xyz")
+        self._ensure_single_level_servoing()
 
         # Create action
         action = Base_pb2.Action()
