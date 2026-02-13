@@ -1,5 +1,5 @@
 <robot name="GEN3-6DOF_VISION_URDF_ARM_V01" version="1.0">
-  <link name="Base_Link">
+  <link name="base_link">
     <inertial>
       <origin xyz="-0.000648 -0.000166 0.084487" rpy="0 0 0" />
       <mass value="1.697" />
@@ -45,7 +45,7 @@
   </link>
   <joint name="Actuator1" type="continuous">
     <origin xyz="0 0 0.15643" rpy="-3.1416 0.0 0.0" />
-    <parent link="Base_Link" />
+    <parent link="base_link" />
     <child link="Shoulder_Link" />
     <axis xyz="0 0 1" />
     <limit effort="39" velocity="0.8727" />
@@ -223,4 +223,33 @@
     <child link="EndEffector_Link" />
     <axis xyz="0 0 0" />
   </joint>
+
+  <!-- ========================= -->
+  <!-- RealSense mounted on wrist -->
+  <!-- ========================= -->
+
+  <!-- Physical mounting frame -->
+  <link name="realsense_link"/>
+
+  <!-- Fixed mount from wrist to RealSense body -->
+  <!-- xyz/rpy must match YOUR measured offset -->
+  <joint name="realsense_mount_joint" type="fixed">
+    <parent link="EndEffector_Link"/>
+    <child link="realsense_link"/>
+    <origin xyz="0.01 0.0 0.052"
+            rpy="-1.57079632679 -1.57079632679 0.0"/>
+  </joint>
+
+  <!-- Optical frame (ROS camera convention) -->
+  <!-- z forward, x right, y down -->
+  <link name="realsense_color_optical_frame"/>
+
+  <joint name="realsense_optical_joint" type="fixed">
+    <parent link="realsense_link"/>
+    <child link="realsense_color_optical_frame"/>
+    <origin xyz="0 0 0"
+            rpy="-1.57079632679 0 -1.57079632679"/>
+  </joint>
+
+
 </robot>
