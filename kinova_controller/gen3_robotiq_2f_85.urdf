@@ -239,17 +239,4 @@
     <origin xyz="0.01 0.0 0.052"
             rpy="-1.57079632679 -1.57079632679 0.0"/>
   </joint>
-
-  <!-- Optical frame (ROS camera convention) -->
-  <!-- z forward, x right, y down -->
-  <link name="realsense_color_optical_frame"/>
-
-  <joint name="realsense_optical_joint" type="fixed">
-    <parent link="realsense_link"/>
-    <child link="realsense_color_optical_frame"/>
-    <origin xyz="0 0 0"
-            rpy="-1.57079632679 0 -1.57079632679"/>
-  </joint>
-
-
 </robot>
